@@ -1,0 +1,11 @@
+# Runtime dependencies (training + serving + drift)
+numpy==2.4.4
+pandas==3.0.2
+scikit-learn==1.8.0
+xgboost==3.4.1
+scipy==1.17.1
+joblib
+fastapi==0.142.2
+uvicorn==0.54.0
+python-multipart
+prometheus-client

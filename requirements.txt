@@ -1,0 +1,6 @@
+# Full development / training / testing environment
+-r requirements-api.txt
+mlflow==3.16.1
+pytest==9.1.1
+flake8
+httpx==0.28.1
