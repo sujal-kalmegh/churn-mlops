@@ -1,0 +1,48 @@
+# docker compose up -d --build                      -> API + MLflow + Prometheus + Grafana
+# docker compose --profile airflow up -d            -> also start Airflow (http://localhost:8080)
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    volumes:
+      - ./models:/app/models          # retrained models are picked up without a rebuild
+      - ./data:/app/data              # production_log.csv written here for drift detection
+    restart: unless-stopped
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.16.1
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts --serve-artifacts
+    ports: ["5000:5000"]
+    volumes: ["./mlflow_data:/mlflow"]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes: ["./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    depends_on: [api]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    ports: ["3000:3000"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on: [prometheus]
+
+  airflow:
+    profiles: ["airflow"]
+    image: apache/airflow:2.9.3
+    command: standalone
+    ports: ["8080:8080"]
+    environment:
+      _PIP_ADDITIONAL_REQUIREMENTS: "scikit-learn==1.8.0 xgboost==3.4.1 scipy pandas mlflow==3.16.1 joblib"
+      MLFLOW_TRACKING_URI: "sqlite:////opt/project/mlflow.db"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - .:/opt/project
