@@ -1,0 +1,145 @@
+{
+ "uid": "churn-api",
+ "title": "Churn API Monitoring",
+ "schemaVersion": 39,
+ "version": 1,
+ "refresh": "10s",
+ "time": {
+  "from": "now-30m",
+  "to": "now"
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "timeseries",
+   "title": "Request rate (req/s)",
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "expr": "sum by (endpoint) (rate(churn_api_requests_total[1m]))",
+     "legendFormat": "{{endpoint}}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "timeseries",
+   "title": "p95 latency (s)",
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "expr": "histogram_quantile(0.95, sum by (le, endpoint) (rate(churn_api_request_latency_seconds_bucket[1m])))",
+     "legendFormat": "{{endpoint}}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "timeseries",
+   "title": "Predictions by class (per min)",
+   "gridPos": {
+    "x": 0,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "expr": "sum by (prediction) (rate(churn_predictions_total[1m])) * 60",
+     "legendFormat": "{{prediction}}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "timeseries",
+   "title": "Error responses (5xx / 4xx)",
+   "gridPos": {
+    "x": 12,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "expr": "sum by (status) (rate(churn_api_requests_total{status=~\"[45]..\"}[1m]))",
+     "legendFormat": "{{status}}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Model F1 (loaded model)",
+   "gridPos": {
+    "x": 0,
+    "y": 16,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "expr": "churn_model_f1",
+     "legendFormat": "F1",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "type": "timeseries",
+   "title": "Avg predicted churn probability",
+   "gridPos": {
+    "x": 12,
+    "y": 16,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "expr": "sum(rate(churn_probability_sum[5m])) / sum(rate(churn_probability_count[5m]))",
+     "legendFormat": "avg p(churn)",
+     "refId": "A"
+    }
+   ]
+  }
+ ]
+}
