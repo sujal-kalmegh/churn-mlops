@@ -66,8 +66,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy (placeholder)
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          echo "Image ghcr.io/${{ github.repository }}:${{ github.sha }} is published."
-          echo "Add your cloud step here, e.g. SSH to EC2 and 'docker compose pull && up -d',"
-          echo "or 'gcloud run deploy' / 'az webapp config container set'."
+          curl --fail --silent --show-error -X POST "$RENDER_DEPLOY_HOOK_URL"
